@@ -65,7 +65,8 @@ fn get_type(value: String) {
     match value.as_str() {
         "echo" => command_type = "builtin".to_string(),
         "type" => command_type = "builtin".to_string(),
-        "echo" => command_type = "builtin".to_string(),
+        "exit" => command_type = "builtin".to_string(),
+        "quit" => command_type = "builtin".to_string(),
         _ => return,
     }
 
