@@ -67,7 +67,7 @@ fn get_type(value: String) {
         "type" => command_type = "builtin".to_string(),
         "exit" => command_type = "builtin".to_string(),
         "quit" => command_type = "builtin".to_string(),
-        _ => return,
+        _ => error(value.as_str().to_string()),
     }
 
     if command_type == "builtin" {
