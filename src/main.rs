@@ -33,7 +33,7 @@ fn error(command: String) {
 }
 
 fn evaluate(command: &String) -> Cmd {
-    let mut task;
+    let task;
     let first_word = first_word(&command);
     match first_word {
         "exit" => task = Cmd::Exit,
@@ -50,7 +50,7 @@ fn execute(task: Cmd) -> bool {
     match task {
         Cmd::Exit => exit = true,
         Cmd::Echo(value) => println!("{}", value),
-        Cmd::Other(value) => println!("{}: command not found", value),
+        Cmd::Other(value) => error(value),
         Cmd::Type(value) => get_type(first_word(value.as_str()).to_string()),
     }
     exit
