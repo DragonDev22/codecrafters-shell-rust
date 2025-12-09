@@ -72,10 +72,12 @@ fn execute(task: Instruction) -> bool {
             Builtin::Exit => exit = true,
             Builtin::Type(args) => get_type(first_word(args.as_str()).to_string()),
         },
-        Instruction::Other(cmd, args) => run_external(
-            find_from_path(get_path(), &cmd),
-            args.split_terminator(' ').collect::<Vec<&str>>(),
-        ),
+        Instruction::Other(cmd, args) => {
+            let mut new_args: Vec<&str> = args.split_terminator(' ').collect::<Vec<&str>>();
+            new_args.remove(0);
+
+            run_external(find_from_path(get_path(), &cmd), new_args)
+        }
     }
     exit
 }
@@ -134,6 +136,7 @@ fn run_external<I: IntoIterator + std::fmt::Debug>(path: String, args: I)
 where
     <I as IntoIterator>::Item: AsRef<OsStr>,
 {
+    println!("running program at: {} with args: {:#?}", &path, &args);
     let output_raw = run(&path, args);
     let output;
     if output_raw.is_err() {
