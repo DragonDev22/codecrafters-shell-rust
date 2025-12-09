@@ -94,7 +94,7 @@ fn find_from_path(paths: Vec<String>, cmd: &String) -> String {
     let mut return_paths: Vec<String> = Vec::new();
     for path in paths {
         let new_path = path.to_string() + "/" + cmd;
-        if !fs::exists(&new_path).unwrap_or_else(|_| false) && !Path::new(&new_path).executable() {
+        if !fs::exists(&new_path).unwrap_or_else(|_| false) || !Path::new(&new_path).executable() {
             continue;
         }
 
