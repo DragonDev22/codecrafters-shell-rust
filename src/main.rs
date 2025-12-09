@@ -1,9 +1,11 @@
+use faccess::{AccessMode, PathExt};
 #[allow(unused_imports)]
 use std::env;
 use std::{
     fmt::format,
-    fs,
-    io::{self, Write},
+    fs::{self, File},
+    io::{self, Read, Write},
+    path::Path,
 };
 
 enum Cmd {
@@ -15,6 +17,8 @@ enum Cmd {
 
 fn main() {
     let mut exit: bool = false;
+
+    env::set_current_dir(Path::new("/")).unwrap();
 
     while !exit {
         let command = get_input();
@@ -87,19 +91,26 @@ fn get_path() -> Vec<String> {
 }
 
 fn find_from_path(paths: Vec<String>, cmd: &String) -> String {
-    let mut return_path: String = String::new();
+    let mut return_paths: Vec<String> = Vec::new();
     for path in paths {
         let new_path = path.to_string() + "/" + cmd;
-        if !fs::exists(&new_path).unwrap_or_else(|_| false) {
+        if !fs::exists(&new_path).unwrap_or_else(|_| false) && !Path::new(&new_path).executable() {
             continue;
         }
 
-        return_path = format(format_args!("{} is {}", cmd, new_path));
+        return_paths.push(new_path);
     }
 
-    if return_path != String::new() {
-        return return_path;
+    if return_paths.len() > 0 {
+        let mut return_string: String = String::new();
+        for path in return_paths {
+            return_string += (path.to_string() + " ").as_str();
+        }
+
+        return_string = format(format_args!("{} is {}", cmd, return_string));
+
+        return return_string;
     } else {
-        return format(format_args!("{}: command not found", cmd));
+        return format(format_args!("{}: not found", cmd));
     }
 }
