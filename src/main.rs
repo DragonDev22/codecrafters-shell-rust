@@ -134,7 +134,6 @@ fn run_external<I: IntoIterator + std::fmt::Debug>(path: String, args: I)
 where
     <I as IntoIterator>::Item: AsRef<OsStr>,
 {
-    println!("running program at: {} with args: {:#?}", &path, &args);
     let output_raw = run(&path, args);
     let output;
     if output_raw.is_err() {
