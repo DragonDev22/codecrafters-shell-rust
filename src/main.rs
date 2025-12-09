@@ -103,9 +103,8 @@ fn find_from_path(paths: Vec<String>, cmd: &String) -> String {
 
     if return_paths.len() > 0 {
         let mut return_string: String = String::new();
-        for path in return_paths {
-            return_string += (path.to_string() + " ").as_str();
-        }
+
+        return_string += return_paths[0].as_str();
 
         return_string = format(format_args!("{} is {}", cmd, return_string));
 
