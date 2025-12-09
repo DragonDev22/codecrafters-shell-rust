@@ -58,7 +58,7 @@ fn evaluate(command: &str) -> Instruction {
             command.split_once(" ").unwrap().1.to_string(),
         )),
         _ => {
-            let args = command.split_at(first_word.len() - 1).1;
+            let args = command.split_at(first_word.len()).1;
             Instruction::Other(first_word.to_string(), args.to_string())
         }
     }
@@ -72,9 +72,10 @@ fn execute(task: Instruction) -> bool {
             Builtin::Exit => exit = true,
             Builtin::Type(args) => get_type(first_word(args.as_str()).to_string()),
         },
-        Instruction::Other(cmd, args) => {
-            run_external(find_from_path(get_path(), &cmd), args.split_terminator(' '))
-        }
+        Instruction::Other(cmd, args) => run_external(
+            find_from_path(get_path(), &cmd),
+            args.split_terminator(' ').collect::<Vec<&str>>(),
+        ),
     }
     exit
 }
@@ -129,10 +130,11 @@ fn find_from_path(paths: Vec<String>, cmd: &String) -> String {
     }
 }
 
-fn run_external<I: IntoIterator>(path: String, args: I)
+fn run_external<I: IntoIterator + std::fmt::Debug>(path: String, args: I)
 where
     <I as IntoIterator>::Item: AsRef<OsStr>,
 {
+    println!("running program at: {} with args: {:#?}", &path, &args);
     let output_raw = run(&path, args);
     let output;
     if output_raw.is_err() {
