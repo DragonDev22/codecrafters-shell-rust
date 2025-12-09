@@ -1,5 +1,10 @@
 #[allow(unused_imports)]
-use std::io::{self, Write};
+use std::env;
+use std::{
+    fmt::format,
+    fs,
+    io::{self, Write},
+};
 
 enum Cmd {
     Echo(String),
@@ -67,10 +72,34 @@ fn get_type(value: String) {
         "type" => command_type = "builtin".to_string(),
         "exit" => command_type = "builtin".to_string(),
         "quit" => command_type = "builtin".to_string(),
-        _ => println!("{}: not found", value),
+        _ => println!("{}", find_from_path(get_path(), &value)),
     }
 
     if command_type == "builtin" {
         println!("{} is a shell builtin", value)
+    }
+}
+
+fn get_path() -> Vec<String> {
+    let path_var = env::var("PATH").unwrap_or_default();
+    let separators = if cfg!(windows) { ';' } else { ':' };
+    path_var.split(separators).map(|s| s.to_string()).collect()
+}
+
+fn find_from_path(paths: Vec<String>, cmd: &String) -> String {
+    let mut return_path: String = String::new();
+    for path in paths {
+        let new_path = path.to_string() + "/" + cmd;
+        if !fs::exists(&new_path).unwrap_or_else(|_| false) {
+            continue;
+        }
+
+        return_path = format(format_args!("{} is {}", cmd, new_path));
+    }
+
+    if return_path != String::new() {
+        return return_path;
+    } else {
+        return format(format_args!("{}: command not found", cmd));
     }
 }
