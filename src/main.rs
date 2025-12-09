@@ -1,18 +1,26 @@
+#![allow(unused_imports, reason = "This is a learning project")]
 use faccess::PathExt;
-#[allow(unused_imports)]
-use std::env;
+use std::env::{self, Args};
+use std::ffi::OsStr;
+use std::io::Error;
+use std::process::Output;
 use std::{
     fmt::format,
     fs::{self},
     io::{self, Write},
     path::Path,
+    process::Command,
 };
 
-enum Cmd {
+enum Instruction {
+    Builtin(Builtin),
+    Other(String, String),
+}
+
+enum Builtin {
     Echo(String),
-    Exit,
-    Other(String),
     Type(String),
+    Exit,
 }
 
 fn main() {
@@ -37,30 +45,36 @@ fn get_input() -> String {
     command.trim().to_string()
 }
 
-fn error(command: String) {
-    println!("{}: command not found", command)
-}
-
-fn evaluate(command: &String) -> Cmd {
-    let task;
+fn evaluate(command: &str) -> Instruction {
     let first_word = first_word(command);
+
     match first_word {
-        "exit" => task = Cmd::Exit,
-        "quit" => task = Cmd::Exit,
-        "echo" => task = Cmd::Echo(command.split_once(" ").unwrap().1.to_string()),
-        "type" => task = Cmd::Type(command.split_once(" ").unwrap().1.to_string()),
-        _ => task = Cmd::Other(first_word.to_string()),
+        "exit" => Instruction::Builtin(Builtin::Exit),
+        "quit" => Instruction::Builtin(Builtin::Exit),
+        "echo" => Instruction::Builtin(Builtin::Echo(
+            command.split_once(" ").unwrap().1.to_string(),
+        )),
+        "type" => Instruction::Builtin(Builtin::Type(
+            command.split_once(" ").unwrap().1.to_string(),
+        )),
+        _ => {
+            let args = command.split_at(first_word.len() - 1).1;
+            Instruction::Other(first_word.to_string(), args.to_string())
+        }
     }
-    task
 }
 
-fn execute(task: Cmd) -> bool {
+fn execute(task: Instruction) -> bool {
     let mut exit = false;
     match task {
-        Cmd::Exit => exit = true,
-        Cmd::Echo(value) => println!("{}", value),
-        Cmd::Other(value) => error(value),
-        Cmd::Type(value) => get_type(first_word(value.as_str()).to_string()),
+        Instruction::Builtin(type_val) => match type_val {
+            Builtin::Echo(args) => println!("{}", args),
+            Builtin::Exit => exit = true,
+            Builtin::Type(args) => get_type(first_word(args.as_str()).to_string()),
+        },
+        Instruction::Other(cmd, args) => {
+            run_external(find_from_path(get_path(), &cmd), args.split_terminator(' '))
+        }
     }
     exit
 }
@@ -76,7 +90,10 @@ fn get_type(value: String) {
         "type" => command_type = "builtin".to_string(),
         "exit" => command_type = "builtin".to_string(),
         "quit" => command_type = "builtin".to_string(),
-        _ => println!("{}", find_from_path(get_path(), &value)),
+        cmd => match find_from_path(get_path(), &cmd.to_string()).as_str() {
+            "" => println!("{}: not found", cmd),
+            path => println!("{} is {}", cmd, path),
+        },
     }
 
     if command_type == "builtin" {
@@ -106,10 +123,37 @@ fn find_from_path(paths: Vec<String>, cmd: &String) -> String {
 
         return_string += return_paths[0].as_str();
 
-        return_string = format(format_args!("{} is {}", cmd, return_string));
-
         return_string
     } else {
-        format(format_args!("{}: not found", cmd))
+        return String::new();
     }
+}
+
+fn run_external<I: IntoIterator>(path: String, args: I)
+where
+    <I as IntoIterator>::Item: AsRef<OsStr>,
+{
+    let output_raw = run(&path, args);
+    let output;
+    if output_raw.is_err() {
+        println!("failed to run command at: {}", path);
+        println!("returned error: {:?}", output_raw.err());
+        return;
+    } else {
+        output = output_raw.ok().unwrap();
+    }
+
+    println!("{}", String::from_utf8_lossy(&output.stdout));
+    let status = output.status;
+    if !status.success() {
+        println!("Exited with status: {}", status);
+        println!("{}", String::from_utf8_lossy(&output.stderr));
+    }
+}
+
+fn run<I: IntoIterator>(path: &str, args: I) -> Result<Output, Error>
+where
+    <I as IntoIterator>::Item: AsRef<OsStr>,
+{
+    Command::new(Path::new(&path)).args(args).output()
 }
