@@ -1,10 +1,10 @@
-use faccess::{AccessMode, PathExt};
+use faccess::PathExt;
 #[allow(unused_imports)]
 use std::env;
 use std::{
     fmt::format,
-    fs::{self, File},
-    io::{self, Read, Write},
+    fs::{self},
+    io::{self, Write},
     path::Path,
 };
 
@@ -34,7 +34,7 @@ fn get_input() -> String {
     io::stdout().flush().unwrap();
     let mut command = String::new();
     io::stdin().read_line(&mut command).unwrap();
-    return command.trim().to_string();
+    command.trim().to_string()
 }
 
 fn error(command: String) {
@@ -43,7 +43,7 @@ fn error(command: String) {
 
 fn evaluate(command: &String) -> Cmd {
     let task;
-    let first_word = first_word(&command);
+    let first_word = first_word(command);
     match first_word {
         "exit" => task = Cmd::Exit,
         "quit" => task = Cmd::Exit,
@@ -94,22 +94,22 @@ fn find_from_path(paths: Vec<String>, cmd: &String) -> String {
     let mut return_paths: Vec<String> = Vec::new();
     for path in paths {
         let new_path = path.to_string() + "/" + cmd;
-        if !fs::exists(&new_path).unwrap_or_else(|_| false) || !Path::new(&new_path).executable() {
+        if !fs::exists(&new_path).unwrap_or(false) || !Path::new(&new_path).executable() {
             continue;
         }
 
         return_paths.push(new_path);
     }
 
-    if return_paths.len() > 0 {
+    if !return_paths.is_empty() {
         let mut return_string: String = String::new();
 
         return_string += return_paths[0].as_str();
 
         return_string = format(format_args!("{} is {}", cmd, return_string));
 
-        return return_string;
+        return_string
     } else {
-        return format(format_args!("{}: not found", cmd));
+        format(format_args!("{}: not found", cmd))
     }
 }
