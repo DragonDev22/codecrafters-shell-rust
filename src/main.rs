@@ -74,9 +74,14 @@ fn execute(task: Instruction) -> bool {
         },
         Instruction::Other(cmd, args) => {
             let mut new_args: Vec<&str> = args.split_terminator(' ').collect::<Vec<&str>>();
-            new_args.remove(0);
-
-            run_external(&cmd, new_args)
+            if find_from_path(get_path(), &cmd).is_empty() {
+                println!("{}: not found", &cmd);
+            } else {
+                if !new_args.is_empty() {
+                    new_args.remove(0);
+                }
+                run_external(&cmd, new_args);
+            }
         }
     }
     exit
@@ -151,11 +156,4 @@ where
     if !status.success() {
         println!("Exited with status: {}", status);
     }
-}
-
-fn run<I: IntoIterator>(path: &str, args: I) -> Result<Output, Error>
-where
-    <I as IntoIterator>::Item: AsRef<OsStr>,
-{
-    Command::new(Path::new(&path)).args(args).output()
 }
