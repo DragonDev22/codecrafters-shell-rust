@@ -76,7 +76,7 @@ fn execute(task: Instruction) -> bool {
             let mut new_args: Vec<&str> = args.split_terminator(' ').collect::<Vec<&str>>();
             new_args.remove(0);
 
-            run_external(find_from_path(get_path(), &cmd), new_args)
+            run_external(&cmd, new_args)
         }
     }
     exit
@@ -132,14 +132,14 @@ fn find_from_path(paths: Vec<String>, cmd: &String) -> String {
     }
 }
 
-fn run_external<I: IntoIterator + std::fmt::Debug>(path: String, args: I)
+fn run_external<I: IntoIterator + std::fmt::Debug>(cmd: &str, args: I)
 where
     <I as IntoIterator>::Item: AsRef<OsStr>,
 {
-    let output_raw = run(&path, args);
+    let output_raw = Command::new(cmd).args(args).output();
     let output;
     if output_raw.is_err() {
-        println!("failed to run command at: {}", path);
+        println!("failed to run command: {}", cmd);
         println!("returned error: {:?}", output_raw.err());
         return;
     } else {
