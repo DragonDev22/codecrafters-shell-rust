@@ -47,7 +47,7 @@ fn get_input() -> String {
 }
 
 fn evaluate(command: &str) -> Instruction {
-    let first_word = first_word(command);
+    let first_word = first_word(command, ' ');
 
     match first_word {
         "exit" => Instruction::Builtin(Builtin::Exit),
@@ -75,7 +75,7 @@ fn execute(task: Instruction) -> bool {
         Instruction::Builtin(type_val) => match type_val {
             Builtin::Echo(args) => println!("{}", args),
             Builtin::Exit => exit = true,
-            Builtin::Type(args) => get_type(first_word(args.as_str()).to_string()),
+            Builtin::Type(args) => get_type(first_word(args.as_str(), ' ').to_string()),
             Builtin::Pwd => {
                 let dir: PathBuf = env::current_dir().unwrap();
 
@@ -100,8 +100,8 @@ fn execute(task: Instruction) -> bool {
     exit
 }
 
-fn first_word(s: &str) -> &str {
-    s.split_whitespace().next().unwrap_or("")
+fn first_word(s: &str, delimiter: char) -> &str {
+    s.split_terminator(delimiter).next().unwrap_or("")
 }
 
 fn get_type(value: String) {
@@ -174,9 +174,18 @@ where
 }
 
 fn change_directory(dir: String) {
-    let dir = dir.trim_start();
-    match env::set_current_dir(&dir) {
+    let mut dir = dir.trim_start();
+
+    let new_dir: String = match first_word(&dir, '/') {
+        "~" => {
+            env::home_dir().unwrap().to_str().unwrap().to_string()
+                + dir.split_at(first_word(&dir, '/').len()).1
+        }
+        _ => dir.to_string(),
+    };
+
+    match env::set_current_dir(&new_dir) {
         Ok(_val) => return,
-        Err(_e) => println!("cd: {}: No such file or directory", &dir),
+        Err(_e) => println!("cd: {}: No such file or directory", &new_dir),
     }
 }
