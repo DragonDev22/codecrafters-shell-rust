@@ -146,7 +146,7 @@ where
         output = output_raw.ok().unwrap();
     }
 
-    println!("{}", String::from_utf8_lossy(&output.stdout));
+    print!("{}", String::from_utf8_lossy(&output.stdout));
     let status = output.status;
     if !status.success() {
         println!("Exited with status: {}", status);
