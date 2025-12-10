@@ -11,25 +11,17 @@ REPLs, builtin commands, and more.
 **Note**: If you're viewing this repo on GitHub, head over to
 [codecrafters.io](https://codecrafters.io) to try the challenge.
 
-# Passing the first stage
+# Command / Feature List:
+## Implemented:
+- `echo` - Prints the args passed after it.
+- `exit` & `quit` - Exits the shell.
+- `type` - Prints if the shell is a builtin command, and if not attempts to find the executable by searching through the `PATH` environment variable.
+- `pwd` - Prints the current working directory.
+- `cd` - Changes the directory. Currently supports absolute paths (e.g. `/home/user/downloads`), and relative paths (e.g. `../` for the parent directory, `./` for the current directory, and `~/` for the user's home directory).
+- Upon another command being entered, the shell searches the `PATH` environment variable to find the executable. If found it will execute it with the args following the command.
+- Basic errors.
 
-The entry point for your `shell` implementation is in `src/main.rs`. Study and
-uncomment the relevant code, and push your changes to pass the first stage:
-
-```sh
-git commit -am "pass 1st stage" # any msg
-git push origin master
-```
-
-Time to move on to the next stage!
-
-# Stage 2 & beyond
-
-Note: This section is for stages 2 and beyond.
-
-1. Ensure you have `cargo (1.91)` installed locally
-1. Run `./your_program.sh` to run your program, which is implemented in
-   `src/main.rs`. This command compiles your Rust project, so it might be slow
-   the first time you run it. Subsequent runs will be fast.
-1. Commit your changes and run `git push origin master` to submit your solution
-   to CodeCrafters. Test output will be streamed to your terminal.
+## Planned:
+- `$VARIABLE` notation to get environment variables.
+- special characters parsing for `echo` (e.g. `echo 'hello\nworld!'` will return `hello\nworld!` without adding a newline).
+- plus more!
