@@ -3,6 +3,7 @@ use faccess::PathExt;
 use std::env::{self, Args};
 use std::ffi::OsStr;
 use std::io::Error;
+use std::path::PathBuf;
 use std::process::Output;
 use std::{
     fmt::format,
@@ -21,6 +22,7 @@ enum Builtin {
     Echo(String),
     Type(String),
     Exit,
+    Pwd,
 }
 
 fn main() {
@@ -57,6 +59,7 @@ fn evaluate(command: &str) -> Instruction {
         "type" => Instruction::Builtin(Builtin::Type(
             command.split_once(" ").unwrap().1.to_string(),
         )),
+        "pwd" => Instruction::Builtin(Builtin::Pwd),
         _ => {
             let args = command.split_at(first_word.len()).1;
             Instruction::Other(first_word.to_string(), args.to_string())
@@ -71,6 +74,11 @@ fn execute(task: Instruction) -> bool {
             Builtin::Echo(args) => println!("{}", args),
             Builtin::Exit => exit = true,
             Builtin::Type(args) => get_type(first_word(args.as_str()).to_string()),
+            Builtin::Pwd => {
+                let dir: PathBuf = env::current_dir().unwrap();
+
+                println!("{}", dir.display())
+            }
         },
         Instruction::Other(cmd, args) => {
             let mut new_args: Vec<&str> = args.split_terminator(' ').collect::<Vec<&str>>();
