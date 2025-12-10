@@ -150,7 +150,10 @@ where
     let status = output.status;
     if !status.success() {
         println!("Exited with status: {}", status);
-        println!("{}", String::from_utf8_lossy(&output.stderr));
+
+        if !output.stderr.is_empty() {
+            println!("{}", String::from_utf8_lossy(&output.stderr));
+        }
     }
 }
 
