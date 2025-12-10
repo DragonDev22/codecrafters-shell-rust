@@ -106,6 +106,7 @@ fn get_type(value: String) {
         "type" => command_type = "builtin".to_string(),
         "exit" => command_type = "builtin".to_string(),
         "quit" => command_type = "builtin".to_string(),
+        "pwd" => command_type = "builtin".to_string(),
         cmd => match find_from_path(get_path(), &cmd.to_string()).as_str() {
             "" => println!("{}: not found", cmd),
             path => println!("{} is {}", cmd, path),
