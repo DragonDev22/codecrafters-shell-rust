@@ -21,6 +21,7 @@ enum Instruction {
 enum Builtin {
     Echo(String),
     Type(String),
+    Cd(String),
     Exit,
     Pwd,
 }
@@ -58,6 +59,9 @@ fn evaluate(command: &str) -> Instruction {
             command.split_once(" ").unwrap().1.to_string(),
         )),
         "pwd" => Instruction::Builtin(Builtin::Pwd),
+        "cd" => Instruction::Builtin(Builtin::Cd(
+            command.split_at(first_word.len()).1.to_string(),
+        )),
         _ => {
             let args = command.split_at(first_word.len()).1;
             Instruction::Other(first_word.to_string(), args.to_string())
@@ -76,6 +80,9 @@ fn execute(task: Instruction) -> bool {
                 let dir: PathBuf = env::current_dir().unwrap();
 
                 println!("{}", dir.display())
+            }
+            Builtin::Cd(dir) => {
+                change_directory(dir);
             }
         },
         Instruction::Other(cmd, args) => {
@@ -105,6 +112,7 @@ fn get_type(value: String) {
         "exit" => command_type = "builtin".to_string(),
         "quit" => command_type = "builtin".to_string(),
         "pwd" => command_type = "builtin".to_string(),
+        "cd" => command_type = "builtin".to_string(),
         cmd => match find_from_path(get_path(), &cmd.to_string()).as_str() {
             "" => println!("{}: not found", cmd),
             path => println!("{} is {}", cmd, path),
@@ -162,5 +170,13 @@ where
     let status = output.status;
     if !status.success() {
         println!("Exited with status: {}", status);
+    }
+}
+
+fn change_directory(dir: String) {
+    let dir = dir.trim_start();
+    match env::set_current_dir(&dir) {
+        Ok(_val) => return,
+        Err(_e) => println!("cd: {}: No such file or directory", &dir),
     }
 }
