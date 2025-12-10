@@ -28,8 +28,6 @@ enum Builtin {
 fn main() {
     let mut exit: bool = false;
 
-    env::set_current_dir(Path::new("/")).unwrap();
-
     while !exit {
         let command = get_input();
 
