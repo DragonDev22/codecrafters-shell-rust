@@ -113,7 +113,7 @@ fn get_type(value: String) {
         "quit" => command_type = "builtin".to_string(),
         "pwd" => command_type = "builtin".to_string(),
         "cd" => command_type = "builtin".to_string(),
-        cmd => match find_from_path(get_path(), &cmd.to_string()).as_str() {
+        cmd => match find_from_path(get_path(), cmd).as_str() {
             "" => println!("{}: not found", cmd),
             path => println!("{} is {}", cmd, path),
         },
@@ -130,7 +130,7 @@ fn get_path() -> Vec<String> {
     path_var.split(separators).map(|s| s.to_string()).collect()
 }
 
-fn find_from_path(paths: Vec<String>, cmd: &String) -> String {
+fn find_from_path(paths: Vec<String>, cmd: &str) -> String {
     let mut return_paths: Vec<String> = Vec::new();
     for path in paths {
         let new_path = path.to_string() + "/" + cmd;
@@ -148,7 +148,7 @@ fn find_from_path(paths: Vec<String>, cmd: &String) -> String {
 
         return_string
     } else {
-        return String::new();
+        String::new()
     }
 }
 
@@ -157,14 +157,13 @@ where
     <I as IntoIterator>::Item: AsRef<OsStr>,
 {
     let output_raw = Command::new(cmd).args(args).output();
-    let output;
-    if output_raw.is_err() {
+    let output: Output = if output_raw.is_err() {
         println!("failed to run command: {}", cmd);
         println!("returned error: {:?}", output_raw.err());
         return;
     } else {
-        output = output_raw.ok().unwrap();
-    }
+        output_raw.ok().unwrap()
+    };
 
     print!("{}", String::from_utf8_lossy(&output.stdout));
     let status = output.status;
@@ -174,18 +173,18 @@ where
 }
 
 fn change_directory(dir: String) {
-    let mut dir = dir.trim_start();
+    let dir = dir.trim_start();
 
-    let new_dir: String = match first_word(&dir, '/') {
+    let new_dir: String = match first_word(dir, '/') {
         "~" => {
             env::home_dir().unwrap().to_str().unwrap().to_string()
-                + dir.split_at(first_word(&dir, '/').len()).1
+                + dir.split_at(first_word(dir, '/').len()).1
         }
         _ => dir.to_string(),
     };
 
     match env::set_current_dir(&new_dir) {
-        Ok(_val) => return,
+        Ok(_val) => (),
         Err(_e) => println!("cd: {}: No such file or directory", &new_dir),
     }
 }
